@@ -1,4 +1,9 @@
 certifi==2019.6.16
+scipy
+mydcc
+dash_bootstrap_components
+pandas
+numpy
 chardet==3.0.4
 Click==7.0
 dash==1.1.1
