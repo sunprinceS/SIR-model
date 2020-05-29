@@ -247,6 +247,7 @@ controls = dbc.Card(
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 app.title = "科普寫作期末專題 - 瘟疫的傳播"
 app.layout = dbc.Container(
     [
