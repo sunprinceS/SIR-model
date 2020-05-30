@@ -51,10 +51,12 @@ def Model(init_cases, init_date, r0, N, t_y_interpolated=None):
     dates = pd.date_range(start=np.datetime64(init_date), periods=days, freq="D")
 
     S, I, R = ret.T
+    r_over_time = np.diff(R, prepend=0)
+    i_over_time = np.diff(I, prepend=0) + r_over_time
     r_interpolated = S/N * t_y_interpolated * r0
 
 
-    return dates, S, I, R, r_interpolated, t_y_interpolated
+    return dates, S, I, R, r_interpolated, t_y_interpolated, i_over_time
 ################################################################################
 
 ### CONTROL BOARD ###
@@ -280,6 +282,7 @@ app.layout = dbc.Container(
                     [
                         # the main graph that displays coronavirus over time.
                         dcc.Graph(id='main_graph'),
+                        dcc.Graph(id='i_new_graph'),
                         # the graph displaying the R values the user inputs over time.
                         # dcc.Graph(id='t_graph'),
                         # dcc.Graph(id='r_graph'),
@@ -328,6 +331,7 @@ app.layout = dbc.Container(
 
 @app.callback(
     [dash.dependencies.Output('main_graph', 'figure'),
+     dash.dependencies.Output('i_new_graph', 'figure'),
      dash.dependencies.Output('t_graph', 'figure'),
      dash.dependencies.Output('r_graph', 'figure'),
      ],
@@ -362,7 +366,7 @@ def update_graph(_, init_cases, init_date, r0, population,t1,t2,t3,t4,t5,t6,t7,t
     t_dates = pd.date_range(start=np.datetime64(init_date), end=np.datetime64("2020-09-01"), freq="D")
     t_y_interpolated = f(np.linspace(0, 8, num=len(t_dates))).tolist()
 
-    dates, S, I, R, r_over_time, t_over_time = Model(init_cases,init_date, r0, population, t_y_interpolated)
+    dates, S, I, R, r_over_time, t_over_time, i_over_time = Model(init_cases,init_date, r0, population, t_y_interpolated)
 
     return {  # return graph for compartments, graph for fatality rates, graph for reproduction rate, and graph for deaths over time
         'data': [
@@ -371,9 +375,16 @@ def update_graph(_, init_cases, init_date, r0, population,t1,t2,t3,t4,t5,t6,t7,t
             {'x': dates, 'y': R.astype(int), 'type': 'line', 'name': 'removed'},
         ],
         'layout': {
-            'title': 'Compartments over time'
-        }
+            'title': 'Compartments over time',
+            }
         },{
+        'data': [
+            {'x': dates, 'y': i_over_time.astype(int), 'type': 'line', 'name': 'daily-new-infected'}
+        ],
+        'layout': {
+            'title': 'Daily New Cases',
+            }
+        }, {
         'data': [
             {'x': dates, 'y': t_over_time, 'type': 'line', 'name': 'transmission rate'}
         ],
@@ -388,6 +399,13 @@ def update_graph(_, init_cases, init_date, r0, population,t1,t2,t3,t4,t5,t6,t7,t
             'title': 'R over time',
             }
         }
-
+# {
+        # 'data': [
+            # {'x': dates, 'y': t_over_time, 'type': 'line', 'name': 'transmission rate'}
+        # ],
+        # 'layout': {
+            # 'title': 'T over time',
+            # }
+        # }
 if __name__ == '__main__':
     app.run_server()
